@@ -6,4 +6,12 @@ public class Item {
         this.nomeProduto = nomeProduto;
         this.quantidade = quantidade;
     }
+
+    public String getNomeProduto() {
+        return nomeProduto;
+    }
+
+    public int getQuantidade() {
+        return quantidade;
+    }
 }

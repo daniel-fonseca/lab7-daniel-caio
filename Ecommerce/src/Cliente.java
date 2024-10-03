@@ -1,13 +1,16 @@
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Cliente implements Runnable {
     private final int clienteId;
     private final BlockingQueue<Pedido> filaDePedidos;
+    private final ConcurrentHashMap<String, Produto> estoque;
 
-    public Cliente(int clienteId, BlockingQueue<Pedido> filaDePedidos) {
+    public Cliente(int clienteId, BlockingQueue<Pedido> filaDePedidos, ConcurrentHashMap<String, Produto> estoque) {
         this.clienteId = clienteId;
         this.filaDePedidos = filaDePedidos;
+        this.estoque = estoque;
     }
 
     @Override
@@ -16,32 +19,25 @@ public class Cliente implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 List<Item> itens = new ArrayList<>();
-                int quantidadeA = random.nextInt(5) + 1;
-                int quantidadeB = random.nextInt(5) + 1;
-
-                boolean adicionouProdutoA = random.nextBoolean();
-                boolean adicionouProdutoB = random.nextBoolean();
-
-                if (adicionouProdutoA) {
-                    itens.add(new Item("ProdutoA", quantidadeA));
+                if (random.nextBoolean()) {
+                    itens.add(new Item("ProdutoA", random.nextInt(5) + 1));
                 }
-                if (adicionouProdutoB) {
-                    itens.add(new Item("ProdutoB", quantidadeB));
+                if (random.nextBoolean()) {
+                    itens.add(new Item("ProdutoB", random.nextInt(5) + 1));
                 }
-                if (!adicionouProdutoA && !adicionouProdutoB) {
-                    itens.add(new Item("ProdutoA", quantidadeA));
+
+                if (itens.isEmpty()) {
+                    itens.add(new Item("ProdutoA", random.nextInt(5) + 1));
                 }
 
                 Pedido pedido = new Pedido(clienteId, itens);
                 filaDePedidos.put(pedido);
-
-                System.out.println("Cliente " + clienteId + " enviou um pedido de " +
-                        (itens.stream().map(item -> item.getNomeProduto() + ": " + item.getQuantidade())
-                                .reduce((a, b) -> a + ", " + b).orElse("Nenhum produto")));
+                System.out.println("Cliente " + clienteId + " enviou um pedido de " + itens.stream().map(item -> item.getNomeProduto() + ": " + item.getQuantidade()).reduce((a, b) -> a + ", " + b).orElse("Nenhum produto"));
 
                 Thread.sleep(random.nextInt(2000) + 1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                break;
             }
         }
     }

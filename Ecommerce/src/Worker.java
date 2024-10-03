@@ -11,9 +11,7 @@ public class Worker implements Runnable {
     private final AtomicInteger pedidosRejeitados;
     private final AtomicInteger valorTotalVendas;
 
-    public Worker(int workerId, BlockingQueue<Pedido> filaDePedidos, BlockingQueue<Pedido> filaDeEspera,
-                  ConcurrentHashMap<String, Produto> estoque, AtomicInteger pedidosProcessados,
-                  AtomicInteger pedidosRejeitados, AtomicInteger valorTotalVendas) {
+    public Worker(int workerId, BlockingQueue<Pedido> filaDePedidos, BlockingQueue<Pedido> filaDeEspera, ConcurrentHashMap<String, Produto> estoque, AtomicInteger pedidosProcessados, AtomicInteger pedidosRejeitados, AtomicInteger valorTotalVendas) {
         this.workerId = workerId;
         this.filaDePedidos = filaDePedidos;
         this.filaDeEspera = filaDeEspera;
@@ -25,35 +23,38 @@ public class Worker implements Runnable {
 
     @Override
     public void run() {
-        try {
-            while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
                 Pedido pedido = filaDePedidos.take();
-                boolean pedidoProcessado = true;
-                int valorPedido = 0;
-
-                for (Item item : pedido.getItens()) {
-                    Produto produto = estoque.get(item.getNomeProduto());
-                    if (produto != null && produto.verificarEstoque(item.getQuantidade()) && produto.retirar(item.getQuantidade())) {
-                        valorPedido += produto.getPreco() * item.getQuantidade();
-                    } else {
-                        pedidoProcessado = false;
-                        break;
-                    }
-                }
-
-                if (pedidoProcessado) {
-                    pedidosProcessados.incrementAndGet();
-                    valorTotalVendas.addAndGet(valorPedido);
-                    System.out.println("Worker " + workerId + " processou o pedido do Cliente " + pedido.getClienteId() +
-                            " Valor: R$" + valorPedido);
-                } else {
-                    pedidosRejeitados.incrementAndGet();
-                    filaDeEspera.put(pedido);
-                    System.out.println("Worker " + workerId + " colocou o pedido na fila de espera.");
-                }
+                processarPedido(pedido);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void processarPedido(Pedido pedido) {
+        int valorPedido = 0;
+        boolean pedidoProcessado = true;
+
+        for (Item item : pedido.getItens()) {
+            Produto produto = estoque.get(item.getNomeProduto());
+            if (produto != null && produto.retirar(item.getQuantidade())) {
+                valorPedido += produto.getPreco() * item.getQuantidade();
+            } else {
+                pedidoProcessado = false;
+                break;
+            }
+        }
+
+        if (pedidoProcessado) {
+            pedidosProcessados.incrementAndGet();
+            valorTotalVendas.addAndGet(valorPedido);
+            System.out.println("Worker " + workerId + " processou o pedido do Cliente " + pedido.getClienteId() + " Valor: R$" + valorPedido);
+        } else {
+            pedidosRejeitados.incrementAndGet();
+            filaDeEspera.offer(pedido);
+            System.out.println("Worker " + workerId + " colocou o pedido do Cliente " + pedido.getClienteId() + " na fila de espera (falta de estoque).");
         }
     }
 }

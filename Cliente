@@ -1,0 +1,19 @@
+static class Cliente implements Runnable {
+    private final int clienteId;
+
+    public Cliente(int clienteId) {
+        this.clienteId = clienteId;
+    }
+
+    @Override
+    public void run() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+}

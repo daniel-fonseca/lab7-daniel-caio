@@ -1,0 +1,25 @@
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+static class Produto {
+    private final String nome;
+    private final int preco;
+    private int quantidade;
+
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+    public Produto(String nome, int quantidade, int preco) {
+        this.nome = nome;
+        this.quantidade = quantidade;
+        this.preco = preco;
+    }
+
+
+    public boolean verificarEstoque(int quantidadeDesejada) {
+        lock.readLock().lock();
+        try {
+            return quantidade >= quantidadeDesejada;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+}

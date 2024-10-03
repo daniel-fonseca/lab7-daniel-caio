@@ -8,4 +8,12 @@ public class Pedido {
         this.clienteId = clienteId;
         this.itens = itens;
     }
+
+    public List<Item> getItens() {
+        return itens;
+    }
+
+    public int getClienteId() {
+        return clienteId;
+    }
 }

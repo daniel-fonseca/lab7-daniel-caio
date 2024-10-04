@@ -30,9 +30,11 @@ public class Cliente implements Runnable {
                     itens.add(new Item("ProdutoA", random.nextInt(5) + 1));
                 }
 
+                System.out.println("Cliente " + clienteId + " enviou um pedido de " + itens.stream().map(item -> item.getNomeProduto() + ": " + item.getQuantidade()).reduce((a, b) -> a + ", " + b).orElse("Nenhum produto"));
+                
                 Pedido pedido = new Pedido(clienteId, itens);
                 filaDePedidos.put(pedido);
-                System.out.println("Cliente " + clienteId + " enviou um pedido de " + itens.stream().map(item -> item.getNomeProduto() + ": " + item.getQuantidade()).reduce((a, b) -> a + ", " + b).orElse("Nenhum produto"));
+                
 
                 Thread.sleep(random.nextInt(2000) + 1000);
             } catch (InterruptedException e) {

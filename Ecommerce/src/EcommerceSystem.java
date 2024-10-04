@@ -66,6 +66,26 @@ public class ECommerceSystem {
         }
 
         System.out.println("Sistema encerrado.");
+    }
 
+    private static void inicializarEstoque() {
+        Random random = new Random();
+        int quantidadeA = random.nextInt(51) + 100;
+        int quantidadeB = random.nextInt(51) + 50;
 
+        estoque.put("ProdutoA", new Produto("ProdutoA", quantidadeA, 10));
+        estoque.put("ProdutoB", new Produto("ProdutoB", quantidadeB, 20));
+
+        System.out.println("Estoque inicializado com " + quantidadeA + " unidades de ProdutoA e " + quantidadeB + " unidades de ProdutoB.");
+    }
+
+    private static void reabastecerEstoque() {
+        int quantidadeReabastecidaA = 20;
+        int quantidadeReabastecidaB = 20;
+
+        estoque.get("ProdutoA").reabastecer(quantidadeReabastecidaA);
+        estoque.get("ProdutoB").reabastecer(quantidadeReabastecidaB);
+
+        System.out.println("Reabastecendo estoque: Adicionados " + quantidadeReabastecidaA + " unidades de ProdutoA e " + quantidadeReabastecidaB + " de ProdutoB.");
+    }
 }

@@ -15,7 +15,6 @@ public class EcommerceSystem {
     public static void main(String[] args) {
         inicializarEstoque();
 
-
         for (int i = 0; i < 5; i++) {
             executor.submit(new Cliente(i + 1, filaDePedidos, estoque));
         }
@@ -23,19 +22,17 @@ public class EcommerceSystem {
             executor.submit(new Worker(i + 1, filaDePedidos, filaDeEspera, estoque, pedidosProcessados, pedidosRejeitados, valorTotalVendas));
         }
 
-
         executor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(10000);
-                    reabastecerEstoque();
+                    reabastecerEstoqueInteligente();
                     reprocessarPedidosPendentes();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         });
-
 
         executor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -79,14 +76,25 @@ public class EcommerceSystem {
         System.out.println("Estoque inicializado com " + quantidadeA + " unidades de ProdutoA e " + quantidadeB + " unidades de ProdutoB.");
     }
 
-    private static void reabastecerEstoque() {
-        int quantidadeReabastecidaA = 20;
-        int quantidadeReabastecidaB = 20;
+    private static void reabastecerEstoqueInteligente() {
+        int quantidadeBase = 20;
 
-        estoque.get("ProdutoA").reabastecer(quantidadeReabastecidaA);
-        estoque.get("ProdutoB").reabastecer(quantidadeReabastecidaB);
+        Produto produtoA = estoque.get("ProdutoA");
+        Produto produtoB = estoque.get("ProdutoB");
+
+        int vendasA = produtoA.getVendas();
+        int vendasB = produtoB.getVendas();
+
+        int quantidadeReabastecidaA = quantidadeBase + (vendasA / 2);
+        int quantidadeReabastecidaB = quantidadeBase + (vendasB / 2);
+
+        produtoA.reabastecer(quantidadeReabastecidaA);
+        produtoB.reabastecer(quantidadeReabastecidaB);
 
         System.out.println("Reabastecendo estoque: Adicionados " + quantidadeReabastecidaA + " unidades de ProdutoA e " + quantidadeReabastecidaB + " de ProdutoB.");
+
+        produtoA.resetarVendas();
+        produtoB.resetarVendas();
     }
 
     private static void reprocessarPedidosPendentes() {

@@ -2,7 +2,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
 
-public class ECommerceSystem {
+public class EcommerceSystem {
 
     private static BlockingQueue<Pedido> filaDePedidos = new ArrayBlockingQueue<>(100);
     private static BlockingQueue<Pedido> filaDeEspera = new LinkedBlockingQueue<>();
@@ -87,5 +87,50 @@ public class ECommerceSystem {
         estoque.get("ProdutoB").reabastecer(quantidadeReabastecidaB);
 
         System.out.println("Reabastecendo estoque: Adicionados " + quantidadeReabastecidaA + " unidades de ProdutoA e " + quantidadeReabastecidaB + " de ProdutoB.");
+    }
+
+    private static void reprocessarPedidosPendentes() {
+        while (!filaDeEspera.isEmpty()) {
+            try {
+                Pedido pedido = filaDeEspera.poll();
+                if (pedido != null) {
+                    processarPedidoReprocessado(pedido);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void processarPedidoReprocessado(Pedido pedido) {
+        int valorPedido = 0;
+        boolean pedidoProcessado = true;
+
+        for (Item item : pedido.getItens()) {
+            Produto produto = estoque.get(item.getNomeProduto());
+            if (produto != null && produto.retirar(item.getQuantidade())) {
+                valorPedido += produto.getPreco() * item.getQuantidade();
+            } else {
+                pedidoProcessado = false;
+                break;
+            }
+        }
+
+        if (pedidoProcessado) {
+            pedidosProcessados.incrementAndGet();
+            valorTotalVendas.addAndGet(valorPedido);
+            System.out.println("Pedido pendente do Cliente " + pedido.getClienteId() + " foi processado.");
+        } else {
+            pedidosRejeitados.incrementAndGet();
+            filaDeEspera.offer(pedido);
+            System.out.println("Pedido pendente do Cliente " + pedido.getClienteId() + " foi colocado de volta na fila de espera (falta de estoque).");
+        }
+    }
+
+    private static void gerarRelatorio() {
+        System.out.println("Relatório de Vendas:");
+        System.out.println("Pedidos processados: " + pedidosProcessados.get());
+        System.out.println("Pedidos rejeitados: " + pedidosRejeitados.get());
+        System.out.println("Valor total das vendas: R$" + valorTotalVendas.get());
     }
 }
